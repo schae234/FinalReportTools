@@ -8,7 +8,7 @@ def main(args):
     parser.add_option("--snp_info",type=str,help="This input file contains the columns necessary to make a map file.")
     parser.add_option("--final_report",type=str,help="This input file contains the columns necessary to make a ped file.")
     parser.add_option("--output_name",type=str,help="This will be the name of your output files.")
-    parser.add_option("--seperator",type=str,default="\t",help="Columns in the input files are seperated by this character (default is tab)")
+    #parser.add_option("--seperator",type=str,default="\t",help="Columns in the input files are seperated by this character (default is tab)")
     options,args = parser.parse_args()
 
     if not options.snp_info:
@@ -86,6 +86,16 @@ def main(args):
         a1  = int(input("Which Line is the Allele 1 Column?        "))-1
         a2  = int(input("Which Line is the Allele 1 Column?        "))-1
         famid =   input("What do you want the Fam Id to be?        ").strip()
+        altr  =   input("Do you want to recode alleles? [Y/N]      ")
+
+    if altr.upper() == 'Y':
+        old = "-ACGT"
+        new = "01234"
+    else:
+        old = '-'
+        new = '0'
+    transtab = str.maketrans(old,new)
+        
 
     ind = defaultdict(dict)
     with open(options.final_report,'r') as IN:
@@ -95,7 +105,7 @@ def main(args):
             line = IN.readline().strip()
         for line in IN:
             flds = line.strip().split()
-            ind[flds[id]][flds[snp]] = "{} {}".format(flds[a1],flds[a2])
+            ind[flds[id]][flds[snp]] = "{} {}".format(flds[a1],flds[a2]).translate(transtab)
     header("Done")
     print("Processed {} Individuals".format(len(ind)))
     input("Look right? Press enter to Continue")
