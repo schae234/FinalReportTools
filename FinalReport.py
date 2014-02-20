@@ -1,59 +1,93 @@
 #!/usr/bin/python
 
-import re
+from __future__ import print_function
 from collections import defaultdict
+import re
+import sys
 
-class FinalReport:
+
+class process():
+    def __init__(self):
+        self.final_report = None
+        self.map = None
+    
+
+class FinalReport(object):
 
     def __init__(self):
+        self.logFile = sys.stdout
         self.delim = "\t"       # how is file delimited?
         self.header = {}        # dict of header info
         self.data_cols = []     # what columns are in file
         self.map = Map()        # map file associated with Report
-        self.data = defaultdict(dict)           # huge data store
+        self.data = defaultdict(dict)         # huge data store
         self.process_func = self.process_header # process function
+        self.allele = "Forward"
+
+        self.SNPs = set()
+        self.indiv = set()
+
+    def log(self,*args):
+        print(*args,file=self.logFile)
   
     # Method to read in a Final Report file 
-    def read_report(self, finalReport_txt):
-        with open(finalReport_txt,'r') as f:
-            # Read the file in and 
-            while f.readable():
-                line = f.readline().strip()
+    def read_report(self, report):
+        with open(report,'r') as file:
+            # Read the file in and process the line based on what section you are in 
+            # In
+            for line_num,line in enumerate(file):
+                if line_num % 1000 == 0:
+                    self.log("On line {}".format(line_num))
+                line = line.strip()
                 if line == '[Header]':
                     self.process_func = self.process_header
                 elif line == '[Data]':
-                    self.data_cols  = f.readline().strip().split(self.delim)
                     self.process_func = self.process_data
                 else:
                     self.process_func(line)
 
+    def read_map(self, map_file):
+        self.map = Map()
+        self.map.read_map(map_file)
+
     # Method to process FinalReport Header information
     def process_header(self, line):
-        delim = re.compile(r'\t+')
-        key,val = delim.split(line)
+        key,val = re.split(r"{}+".format(self.delim),line)
         self.header[key] = val
 
     # Method to process FinalReport Data Information
     def process_data(self, line):
-        snp,ind,f1,f2,t1,t2,ab1,ab2,gc,x,y = line.split(self.delim)
-        self.data[ind][snp] = {
-            'gc' : gc,
-            'x' : x,
-            'y' : y,
-            'alleles' : {
-                'top' : [t1,t2],
-                'forward' : [f1,f2],
-                'ab' : [ab1,ab2],
-            },
-        }
+        fields = line.split(self.delim)
+        if not self.data_cols: 
+            self.data_cols = fields
+            self.ID_col = self.which_data_col("Sample ID")[0]
+            self.SNP_col = self.which_data_col("SNP")[0]
+            self.a1_col = self.which_data_col(self.allele)[0]
+            self.a2_col = self.which_data_col(self.allele)[1]
+        else:
+            # Extract the data
+            ID = fields[self.ID_col]
+            SNP = fields[self.SNP_col]
+            allele1 = fields[self.a1_col]
+            allele2 = fields[self.a2_col]
+            # Store it in a data structure
+            self.data[ID][SNP] = (allele1,allele2) 
+            self.SNPs.add(SNP)
+            self.indiv.add(ID)
 
-    def print_ped(self):
+    def write_ped(self,output_name):
         return 1
-    def print_map(self):
-        return 1 
+    def write_map(self,output_name):
+         with open(output_name,'w') as output:
+            output.write(str(self.map))
+
+    def which_data_col(self,col_string):
+        ''' return a list of data column indices which include the col_string '''
+        return [i for i,val in enumerate(self.data_cols) if col_string in val]
 
 
-class Snp:
+
+class Snp(object):
     def __init__(self, chrom, name, cm, pos):
         self.chrom = chrom
         self.name = name
@@ -65,9 +99,9 @@ class Snp:
         return "chr%s.%s" % (self.chrom, self.pos)
 
     def __str__(self, bypos=False):
-        return "%s\t%s\t%s\t%s" % (self.chrom, self.position_tag, self.cm, self.pos)
+        return "{}\t{}\t{}\t{}".format(self.chrom, self.position_tag, self.cm, self.pos)
 
-class Map:
+class Map(object):
     def __init__(self):
         self.snp_map = {}
         self.pos_map = defaultdict(dict)
@@ -86,7 +120,7 @@ class Map:
         self.names.sort()
     
     def add_snp(self, Snp):
-        self.snp_mapping[snp.name] = snp
+        self.snp_mapping[snp.name] = Snp
 
     def __str__(self, bypos = False):
         full_map = ''
@@ -94,7 +128,7 @@ class Map:
             full_map = full_map + str(snp) + "\n"
         return full_map
 
-class Ped:
+class Ped(object):
     def __init__(self):
         self.individuals = defaultdict(Individual)
         self.snp_map = Map()
@@ -103,7 +137,7 @@ class Ped:
         self.individuals[name] = Individual(fam,name,sex,pheno)
 
 
-class Individual:
+class Individual(object):
     def __init__(self, fam, name, sex, pheno):
         self.fam = fam,
         self.name = name,
