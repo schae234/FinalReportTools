@@ -13,13 +13,13 @@ def main(args):
 
     if not options.snp_info:
         parser.print_help()
-        exit("You need to specify an SNP info file using --snp_info option, see the help above")
+        sys.exit("You need to specify an SNP info file using --snp_info option, see the help above")
     if not options.final_report:
         parser.print_help()
-        exit("You need to specify an Final Report file using --final_report option, see the help above")
+        sys.exit("You need to specify an Final Report file using --final_report option, see the help above")
     if not options.output_name:
         parser.print_help()
-        exit("You need to specify an OutPut Name using --output_name option, see the help above")
+        sys.exit("You need to specify an OutPut Name using --output_name option, see the help above")
 
     # Do the Map Calculations
     with open(options.snp_info,'r') as f:
@@ -28,7 +28,7 @@ def main(args):
         headers = []
         for i in range(1,11):
             line = f.readline().strip()
-            print("(Line " + str(i) + ") |\t"+ "\t".join(line.split()))
+            print("(Line " + str(i) + ") |\t"+ "\t".join(line.split('\t')))
             headers.append(line)
         skip   = int(input("Which line is the header line (0 for none)?:   "))
         clear()
@@ -48,7 +48,7 @@ def main(args):
             line = IN.readline().strip()
         # Create the rest of the map file
         for line in IN:
-            flds = line.strip().split()
+            flds = line.strip().split('\t')
             snps[flds[id]] = [flds[chr],flds[id],'0',flds[pos]]
             # We dont want to mess up the chromosome field
             chroms.add(flds[chr])
@@ -74,7 +74,7 @@ def main(args):
         headers = []
         for i in range(1,31):
             line = IN.readline().strip()
-            print("Line " + str(i) + "\t|  " + "\t".join(line.split())[:80])
+            print("Line " + str(i) + "\t|  " + "\t".join(line.split('\t'))[:80])
             headers.append(line)
         skip   = int(input("Which line is the header line (0 for none)?:    "))
         clear() 
@@ -84,9 +84,9 @@ def main(args):
         id  = int(input("Which Line is the Individual ID column?   "))-1
         snp = int(input("Which Line is the SNP ID Column           "))-1
         a1  = int(input("Which Line is the Allele 1 Column?        "))-1
-        a2  = int(input("Which Line is the Allele 1 Column?        "))-1
+        a2  = int(input("Which Line is the Allele 2 Column?        "))-1
         famid =   input("What do you want the Fam Id to be?        ").strip()
-        altr  =   input("Do you want to recode alleles? [Y/N]      ")
+        altr  =   input("Recode alleles to numeric? [Y/N]          ")
 
     if altr.upper() == 'Y':
         old = "-ACGT"
@@ -97,15 +97,17 @@ def main(args):
     transtab = str.maketrans(old,new)
         
 
+    clear()
+    header('Processing Final Report...')
     ind = defaultdict(dict)
     with open(options.final_report,'r') as IN:
-        clear()
-        header('Processing Final Report...')
         for i in range(0,skip):
             line = IN.readline().strip()
-        for line in IN:
-            flds = line.strip().split()
+        for i,line in enumerate(IN):
+            flds = line.strip().split('\t')
             ind[flds[id]][flds[snp]] = "{} {}".format(flds[a1],flds[a2]).translate(transtab)
+            if i % 500000 == 0:
+                header("......processed {} lines".format(i))
     header("Done")
     print("Processed {} Individuals".format(len(ind)))
     input("Look right? Press enter to Continue")
@@ -115,12 +117,14 @@ def main(args):
     # print out the PED file
     with open(options.output_name+".ped",'w') as OUT:
         for i in ind.keys():
+            header("Processing {}".format(i))
             print("{}\t{}\t0\t0\t0\t0".format(famid,i),sep="\t",end="",file=OUT)
             for snp in ordered_snps:
                 if snp in ind[i].keys():
                     print("\t"+ind[i][snp],end="",file=OUT)
                 else:
                     print("\t0 0",end="",file=OUT)
+            print("\n",file=OUT,end="")
 
 
 
@@ -131,4 +135,4 @@ def header(text):
     print("-"*20,text,"-"*20)
 
 if __name__ == "__main__":
-    exit(main(sys.argv[1:]))
+    sys.exit(main(sys.argv[1:]))
