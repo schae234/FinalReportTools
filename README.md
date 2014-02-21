@@ -11,6 +11,7 @@ and does the appropriate conversions to PLINK map and ped files. Running
 the script will bring you through a wizrd which has you select the appropriate
 data columms from your files.
 
+```{bash}
 Usage: Final2MapPed.py [options]
 
 Options:
@@ -22,4 +23,4 @@ Options:
                         a ped file.
   --output_name=OUTPUT_NAME
                         This will be the name of your output files.
-
+```
