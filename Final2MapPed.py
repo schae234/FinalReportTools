@@ -1,7 +1,13 @@
+#!/usr/bin/env python2
 from __future__ import print_function
 import sys
 from optparse import OptionParser
 from collections import defaultdict
+
+
+if sys.version_info[0] != 2:
+	exit('This script is only guaranteed to work with python2')
+
 
 def main(args):
     parser = OptionParser()
