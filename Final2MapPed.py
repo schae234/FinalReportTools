@@ -36,14 +36,14 @@ def main(args):
             line = f.readline().strip()
             print("(Line " + str(i) + ") |\t"+ "\t".join(line.split('\t')))
             headers.append(line)
-        skip   = int(input("Which line is the header line (0 for none)?:   "))
+        skip   = int(raw_input("Which line is the header line (0 for none)?:   "))
         clear()
         header("HEADER Columns")
         for i,l in enumerate(headers[skip-1].split('\t')):
             print("(Line {}) |\t{}".format(i+1,l))
-        id  = int(input("Which Row is the ID column?          "))-1
-        chr = int(input("Which Row is the Chromosome column?  "))-1
-        pos = int(input("Which Row is the position column?    "))-1
+        id  = int(raw_input("Which Row is the ID column?          "))-1
+        chr = int(raw_input("Which Row is the Chromosome column?  "))-1
+        pos = int(raw_input("Which Row is the position column?    "))-1
     clear()
     header("Generating Map File....")
     snps     = defaultdict(list)
@@ -62,7 +62,7 @@ def main(args):
         print("Processed {} unique SNPs:".format(len(snps)))
         print("Processed the following Chromosomes\n\t{}".format(",".join(chroms)))
         header("Done")
-        input("Look right? Press Enter to Continue")
+        raw_input("Look right? Press Enter to Continue")
     # Print out the map file
     header("Saving Map File....")
     ordered_snps = list(snps.keys())
@@ -82,17 +82,17 @@ def main(args):
             line = IN.readline().strip()
             print("Line " + str(i) + "\t|  " + "\t".join(line.split('\t'))[:80])
             headers.append(line)
-        skip   = int(input("Which line is the header line (0 for none)?:    "))
+        skip   = int(raw_input("Which line is the header line (0 for none)?:    "))
         clear() 
         header("Header Columns:")
         for i,l in enumerate(headers[skip-1].split('\t')):
             print("(Line {}) |\t{}".format(i+1,l))
-        id  = int(input("Which Line is the Individual ID column?   "))-1
-        snp = int(input("Which Line is the SNP ID Column           "))-1
-        a1  = int(input("Which Line is the Allele 1 Column?        "))-1
-        a2  = int(input("Which Line is the Allele 2 Column?        "))-1
-        famid =   input("What do you want the Fam Id to be?        ").strip()
-        altr  =   input("Recode alleles to numeric? [Y/N]          ")
+        id  = int(raw_input("Which Line is the Individual ID column?   "))-1
+        snp = int(raw_input("Which Line is the SNP ID Column           "))-1
+        a1  = int(raw_input("Which Line is the Allele 1 Column?        "))-1
+        a2  = int(raw_input("Which Line is the Allele 2 Column?        "))-1
+        famid =   raw_input("What do you want the Fam Id to be?        ").strip()
+        altr  =   raw_input("Recode alleles to numeric? [Y/N]          ")
 
     if altr.upper() == 'Y':
         old = "-ACGT"
@@ -116,7 +116,7 @@ def main(args):
                 header("......processed {} lines".format(i))
     header("Done")
     print("Processed {} Individuals".format(len(ind)))
-    input("Look right? Press enter to Continue")
+    raw_input("Look right? Press enter to Continue")
 
     clear()
     header("Saving PED FILE....")
